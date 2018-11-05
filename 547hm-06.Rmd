@@ -1,0 +1,482 @@
+---
+title: "STAT547 Homework 06"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## Overview
+I will be working on task 1 Character data, and task 4 Work with the singer data for this assignment. I wish to practice with regular expressions in R and the purr package. 
+
+## Task 1 Character data
+This part follows the instruction of page https://r4ds.had.co.nz/strings.html. I found this [link](https://github.com/cimentadaj/R4DS-Solutions/blob/master/ch11.Rmd) very helpful.
+
+### 1.1 Loading packages
+```{r}
+library(tidyverse)
+library(stringr)
+```
+
+### 1.2 String basics
+#### 1.2.1 Material
+
+```{r}
+string_1 <- "this is a string"
+string_1
+double_quote <- "\""
+string_2 <- c("this is another string", "\\")
+writeLines(string_2)
+string_3 <- c("this is the third string\n", "2")
+writeLines(string_3)
+```
+
+String lenght
+```{r}
+string_4 <- c("ala ma kota","ABC",NA)
+str_length(string_4)
+```
+Combining strings
+```{r}
+str_c(string_3, "a")
+str_c(string_3, "a", sep = ",")
+# replace nas
+str_replace_na(string_4)
+str_c(string_3, string_2, collapse = ",")
+```
+
+Subsetting strings
+```{r}
+string_5 <- c("book", "like", "Sam")
+str_sub(string_5, 1, 2)
+```
+
+Locale 
+```{r}
+str_to_upper(string_5)
+```
+
+#### 1.2.2 Exercise
+1. In your own words, describe the difference between the sep and collapse arguments to str_c().
+sep can seperate two strings using the value that is assigned to sep, and collapse allow us to turn a vector of strings into a single string.
+
+2. Use str_length() and str_sub() to extract the middle character from a string. What will you do if the string has an even number of characters?
+```{r}
+str_sub(string_1, str_length(string_1)/2, str_length(string_1)/2+1)
+```
+
+3. What does str_wrap() do? When might you want to use it?
+It turns a string into several lines of a certain length.
+```{r}
+writeLines(str_wrap(string_1, width = 5))
+```
+
+4. What does str_trim() do? What’s the opposite of str_trim()?
+It trims the everything rather than character of a string from different directions.
+```{r}
+str_trim(str_c("   ", string_1), side = c("left"))
+```
+
+### 1.3 Matching patterns with regular expressions
+
+#### 1.3.1 Basic matches
+```{r}
+string_6 <- c("google", "guggle", "giggle", "ggplot")
+str_view(string_6, "gg")
+str_view(string_6, ".g.")
+str_view(c("abc", "a.c", "bef"), "a\\.c")
+```
+
+#### 1.3.1 Exercise
+1. How would you match the sequence "'\?
+```{r}
+string_7 <- "a\"'\\b"
+writeLines(string_7)
+str_view(string_7, "\\\"'\\\\")
+```
+
+#### 1.3.2 Anchors
+
+```{r}
+str_view(string_6, "e$")
+str_view(string_6, "^g")
+```
+
+#### 1.3.2 Exercise
+1. How would you match the literal string "$^$"?
+```{r}
+string_8 <- "apple$^$"
+string_8
+str_view(string_8, "\\$\\^\\$")
+```
+
+
+2. Given the corpus of common words in stringr::words, create regular expressions that find all words that:
+
+a. Start with “y”.
+b. End with “x”
+c. Are exactly three letters long. (Don’t cheat by using str_length()!)
+d. Have seven letters or more.
+e. Since this list is long, you might want to use the match argument to str_view() to show only the matching or non-matching words.
+```{r}
+words <- stringr::words
+words
+(a <- str_view(words, "^y", match = T))
+(b <- str_view(words, "x$", match = T))
+(c <- str_view(words, "^...$", match = T))
+(d <- str_view(words, "^.......*$", match = T))
+```
+
+#### 1.3.3 Character classes and alternatives 
+
+```{r}
+string_9 <- "UBC STAT 545 abc a*c a.c"
+str_view(string_9, "\\d")
+str_view(string_9, "a[.]c")
+str_view(c("tab", "tap"), "ta(b|p)")
+```
+
+#### 1.3.3 Exercise
+Create regular expressions to find all words that:
+
+a. Start with a vowel.
+
+b. That only contain consonants. (Hint: thinking about matching “not”-vowels.)
+
+c. End with ed, but not with eed.
+
+d. End with ing or ise.
+
+```{r}
+string_10 <- c("like", "apple", "true", "kicked", "proceed", "doing", "Spanish")
+str_view(string_10, "^[aeiou]")
+str_view(string_10, "[^aeiou]")
+str_view(string_10, "[^e]ed$")
+str_view(string_10, "i(ng|sh)$")
+```
+
+#### 1.3.4 Repetition
+```{r}
+string_dna <- "acgttttgcatctgggggt"
+str_view(string_dna, "gg?")
+str_view(string_dna, "gg+")
+str_view(string_dna, "ggg{1}")
+str_view(string_dna, "g{2,}")
+```
+
+#### 1.3.4 Exercise
+a. Describe the equivalents of ?, +, * in {m,n} form.
+? is {,1}
++ is {1,}
+* has no equivalent
+
+b. Describe in words what these regular expressions match: (read carefully to see if I’m using a regular expression or a string that defines a regular expression.)
+
+^.*$ # It matches any string
+"\\{.+\\}" # It matches any string with curly braces
+\d{4}-\d{2}-\d{2}  # It matches numbers in dddd-dd-dd format
+"\\\\{4}" # It mathces four backslashes.
+
+c. Create regular expressions to find all words that:
+
+Start with three consonants.
+```{r}
+str_view(string_10, "^[^aeiou][^aeiou][^aeiou]")
+```
+
+Have three or more vowels in a row.
+```{r}
+str_view(string_10, "[aeiou]{3,}")
+```
+
+#### 1.3.5 Grouping and backreferences
+```{r}
+string_11 <- c("papas", "ididids", "ududududa", "ababbaba")
+str_view(string_11, "(.)(.)\\2\\1")
+```
+
+#### 1.3.5 Exercise
+a. Describe, in words, what these expressions will match:
+
+(.)\1\1 # one character repeats for 3 times
+"(.)(.)\\2\\1" # two characters followed by the same two characters in reverse order
+(..)\1 # two characters repeat once
+"(.).\\1.\\1" # one character repeated three times with characters in between each repitition
+
+#### 1.4.1 Detect matches
+```{r}
+string_10
+str_detect(string_10, "a")
+sum(str_detect(string_10, "^p"))
+mean(str_detect(string_10, "[^aeiou]$"))
+no_vowels <- !str_detect(string_10, "[aeiou]")
+no_vowels
+```
+
+```{r}
+words[str_detect(words, "ed$")]
+```
+
+```{r}
+dataframe <- tibble(
+  word = words,
+  i = seq_along(word)
+)
+dataframe %>% 
+  filter(str_detect(word, "ed$"))
+```
+```{r}
+str_count(string_10, "e")
+mean(str_count(string_10, "[^aeiou]")) # the mean value of the number of consonants in words
+```
+
+```{r}
+dataframe %>% 
+  mutate(
+    vowels = str_count(word, "[aeiou]"),
+    consonants = str_count(word, "[^aeiou]")
+  )
+```
+
+#### 1.4.1 Exercise
+a. For each of the following challenges, try solving it by using both a single regular expression, and a combination of multiple str_detect() calls.
+
+Find all words that start or end with x.
+```{r}
+start_with_x <- str_detect(words, "^x")
+end_with_x <- str_detect(words, "x$")
+words[start_with_x|end_with_x]
+```
+
+Find all words that start with a vowel and end with a consonant.
+```{r}
+start_with_v <- str_detect(words, "^[aeiou]")
+end_with_c <- str_detect(words, "[^aeiou]$")
+words[start_with_v&end_with_c]
+```
+
+#### 1.4.3 Extract matches
+```{r}
+head(sentences)
+```
+
+To find all sentences that contain a color.
+```{r}
+colours <- c("red", "blue", "green", "yellow", "orange", "black")
+colour_match <- str_c(colours, collapse = "|")
+colour_match
+```
+```{r}
+has_color <- str_subset(sentences, colour_match)
+matches <- str_extract(has_color, colour_match)
+head(matches)
+```
+
+```{r}
+more <- sentences[str_count(sentences, colour_match) > 1]
+str_view_all(more, colour_match)
+str_extract_all(more, colour_match, simplify = T)
+```
+
+#### 1.4.3 Exercise
+
+a. From the Harvard sentences data, extract:
+
+The first word from each sentence.
+```{r}
+first_word <- str_extract(sentences, "^[a-zA-Z]+")
+first_word
+```
+
+All words ending in ing.
+
+```{r}
+ing_end <- str_extract(sentences, "\\b[a-zA-Z]+ing\\b")
+ing_end[!is.na(ing_end)]
+```
+
+#### 1.4.4 Grouped matches
+```{r}
+nouns <- "(a|the) ([^ ]+)"
+has_noun <- sentences %>% 
+  str_subset(nouns) %>% 
+  head(10)
+has_noun
+has_noun %>% 
+  str_extract(nouns)
+has_noun %>% 
+  str_match(nouns)
+```
+
+```{r}
+tibble(sentence = sentences) %>% 
+  tidyr::extract(
+    sentence, c("article", "noun"), "(a|the) ([^ ]+)", 
+    remove = FALSE
+  )
+```
+
+#### 1.4.4 Exercise
+a. Find all words that come after a “number” like “one”, “two”, “three” etc. Pull out both the number and the word.
+```{r}
+num <- "(one|two|three|four|five|sex|seven|eight|nine) ([^ ]+)"
+has_num <- sentences %>% 
+  str_subset(num) %>% 
+  head(10)
+has_num
+has_num %>% 
+  str_extract(num)
+```
+
+b. Find all contractions. Separate out the pieces before and after the apostrophe.
+```{r}
+contract_re <- "([a-zA-Z]+)'([a-zA-Z]+)"
+contract <- sentences[str_detect(sentences, contract_re)]
+str_match(contract, contract_re)
+```
+
+#### 1.4.5 Replacing matches
+Replacing some character in a string with some characters
+```{r}
+str_replace(string_10, "[^aeiou]", "-")
+str_replace_all(string_10, "[^aeiou]", "-")
+```
+
+```{r}
+string_12 <- c("1 house", "2 cars", "3 people")
+str_replace_all(string_12, c("1" = "one", "2" = "two", "3" = "three"))
+```
+
+change the order of the second and the third word using str_replace
+```{r}
+sentences %>% 
+  str_replace("([^ ]+) ([^ ]+) ([^ ]+)", "\\1 \\3 \\2") %>%
+  head(3)
+```
+
+#### 1.4.5 exercise
+a. Replace all forward slashes in a string with backslashes.
+```{r}
+string_13 <- c("/1", "/2")
+writeLines(string_13)
+str_replace(string_13, "/", "\\\\")
+```
+
+
+b. Switch the first and last letters in words. Which of those strings are still words?
+```{r}
+rep_word <- str_replace_all(words, "^([a-z])(.*)([a-z])$", c("\\3\\2\\1"))
+head(rep_word)
+```
+
+#### 1.4.6 Splitting
+To tokenize the sentences
+```{r}
+sentences %>% 
+  head(10) %>% 
+  str_split(" ", simplify = T)
+```
+
+```{r}
+"aa|bb|cc|dd" %>% 
+  str_split("\\|") %>% 
+  .[[1]]
+```
+To deal with a dictionary
+```{r}
+dic <- c("like:1", "the:2", "you:3")
+str_split(dic, ":", n =2, simplify = T)
+```
+
+```{r}
+str_view_all(string_1, boundary("word"))
+str_split(string_1, boundary("word"))[[1]]
+```
+
+#### 1.4.6 Exercise
+a. Split up a string like "apples, pears, and bananas" into individual components.
+```{r}
+string_14 <- "apples, pears, and bananas"
+str_split(string_14, boundary("word"))[[1]]
+```
+
+
+What does splitting with an empty string ("") do? Experiment, and then read the documentation.
+It split every character.
+```{r}
+str_split(string_14, "")[[1]]
+```
+
+
+#### 14.5 Other types of pattern
+
+```{r}
+apples <- c("apple","Apple","APPLE")
+str_view(apples, regex("apple", ignore_case = T))
+```
+
+Characters with some diacritics
+```{r}
+ipa1 <- "\u00e1"
+ipa2 <- "a\u0301"
+c(ipa1, ipa2)
+```
+
+#### 1.4.5 Exercise
+What are the five most common words in sentences?
+```{r}
+unlist(str_split(sentences, boundary("word"))) %>% 
+  str_to_lower() %>% 
+  tibble() %>% 
+  set_names("words") %>% 
+  count(words) %>% 
+  arrange(desc(n)) %>% 
+  head(5)
+```
+
+#### 1.4.6 Other uses of regular expressions
+```{r}
+apropos("replace")
+#apropos("str")
+head(dir(pattern = "\\.Rmd$"))
+```
+
+#### 1.4.7 stringi
+Find the stringi functions that:
+
+Count the number of words.
+```{r}
+library(stringi)
+stri_count(string_10, regex = "([^ ]+)")
+```
+
+Find duplicated strings.
+stri_duplicated
+
+Generate random text.
+stri_rand_* functions
+
+## Task 4
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
