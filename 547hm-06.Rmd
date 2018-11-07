@@ -1,6 +1,7 @@
 ---
 title: "STAT547 Homework 06"
 output: github_document
+always_allow_html: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -10,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ## Overview
-I will be working on task 1 Character data, and task 4 Work with the singer data for this assignment. I wish to practice with regular expressions in R and the purr package. 
+I will be working on task 1 Character data, and task 2 Writing functions for this assignment. I wish to practice with string and regular expressions in R, and write some functions. 
 
 ## Task 1 Character data
 This part follows the instruction of page https://r4ds.had.co.nz/strings.html. I found this [link](https://github.com/cimentadaj/R4DS-Solutions/blob/master/ch11.Rmd) very helpful.
@@ -459,7 +460,42 @@ stri_duplicated
 Generate random text.
 stri_rand_* functions
 
-## Task 4
+## Task 2 Writing functions
+For this task, I would like to take the GDP per capita of Europe and Asia of the year 2007 and 2002, and wrtie functions that will compare the gdpPercap of these two continent by doing T-test. Further, I will write another function that can plot the gdpPercap and the p value.
+
+To get the data
+```{r}
+library(gapminder)
+sub_dat <- gapminder %>% 
+  filter(continent %in% c("Europe", "Asia")) %>% 
+  filter(year %in% c(2007, 2002))
+head(sub_dat)
+nrow(sub_dat)
+```
+
+Write a funtion to do the lmer test that compares the gdpPercap of Asia and Europe (it can be other continent, these two are used here beacuse it has been subseted)in the year 2007 and 2002.
+```{r}
+library(lme4)
+library(lmerTest)
+lmer_test <- function(dat) {
+  model = lmer(gdpPercap~continent + (1|year), data = dat)
+  return(summary(model))
+}
+lmer_test(sub_dat)
+```
+
+From the results of the lmer test, we know that the GDP per Capita of Europe in 2002 and 2007 is significantly higher than it of Asia. I would like to write another function to plot the observations of gdpPercap to visulize the difference.
+```{r}
+library(ggplot2)
+make_plot <- function(dat){
+  plt = ggplot(dat, aes(continent, gdpPercap, fill = continent)) + geom_boxplot() + facet_wrap(~year)
+  return(plt)
+}
+make_plot(sub_dat)
+```
+
+
+
 
 
 
